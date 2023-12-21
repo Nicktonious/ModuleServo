@@ -5,31 +5,35 @@
 class ClassServo extends ClassMiddleActuator {
     /**
      * @constructor
-     * @param {ActuatorPropsType} _actuatorProps 
+     * @param {ActuatorPropsType} _opts 
      * @param {ActuatorOptsType} _opts
      */
     constructor(_actuatorProps, _opts) {
         ClassMiddleActuator.call(this, _actuatorProps, _opts);
+        /******************** Validation and init ********************** */
+        if (typeof _opts.maxRange !== 'number' || 
+            typeof _opts.maxPulse !== 'number' ||
+            typeof _opts.minPulse !== 'number') throw new Error('Some arg are missing');
+        if (_opts.minRange && typeof _opts.minRange !== 'number' ||
+            _opts.minRange >= _opts.maxRange ||
+            _opts.minPulse >= _opts.maxPulse ||
+            _opts.defaultPos && typeof _opts.defaultPos !== 'number' ||
+            _opts.defaultPos < _opts.minRange || 
+            _opts.defaultPos > _opts.maxRange) throw new Error('Invalid arg');
 
-        const changeNotation = str => `_${str[0].toUpperCase()}${str.substr(1)}`;       //converts "propName" -> "_PropName"
-
-        if (typeof _actuatorProps.maxRange !== 'number' || 
-            typeof _actuatorProps.maxPulse !== 'number' ||
-            typeof _actuatorProps.minPulse !== 'number') throw new Error('Some arg are missing');
-        if (_actuatorProps.minRange && typeof _actuatorProps.minRange !== 'number' ||
-            _actuatorProps.minRange >= _actuatorProps.maxRange ||
-            _actuatorProps.minPulse >= _actuatorProps.maxPulse ||
-            _actuatorProps.defaultPos && typeof _actuatorProps.defaultPos !== 'number' ||
-            _actuatorProps.defaultPos < _actuatorProps.minRange || 
-            _actuatorProps.defaultPos > _actuatorProps.maxRange) throw new Error('Invalid arg');
-        
-        this._MinRange = _actuatorProps.minRange || 0;
-        this._MaxRange = _actuatorProps.maxRange;
-        this._MaxPulse = _actuatorProps.maxPulse;
-        this._MinPulse = _actuatorProps.minPulse;
-        this._DefaultPos = _actuatorProps.defaultPos || this._MinRange;
+        this._MinRange = _opts.minRange || 0;
+        this._MaxRange = _opts.maxRange;
+        this._MaxPulse = _opts.maxPulse;
+        this._MinPulse = _opts.minPulse;
+        this._DefaultPos = _opts.defaultPos || this._MinRange;
         this._LastInput = undefined;
         this.Reset();
+        /******************** Returning channel *************************** */
+        let channel = this.GetChannel(0);
+        Object.defineProperty(channel, 'Position', {
+            get: () => this._LastInput
+        });
+        return channel;
     }
     /**
      * @getter
