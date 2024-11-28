@@ -32,7 +32,7 @@ class ClassServo extends ClassActuator {
         this._MinPulse = _opts.minPulse;
         this._StartPos = _opts.startPos || 0;
         this._Value = undefined;
-        this._Pins[0].mode('analog');
+        pinMode(this._Pins[0], 'output', true);
     }
     /**
      * @method
