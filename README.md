@@ -32,34 +32,19 @@
 ## Конструктор
 <div style = "color: #555">
 
-В соответствии с подходом, заложенным ModuleActuator, конструктор принимает 1 объект типа **ActuatorOptsType** и 1 объект типа **ActuatorPropsType** (подробнее по [ссылке](https://github.com/Konkery/ModuleActuator/blob/fork-nikita/README_ANCESTOR.md#%D0%BA%D0%BE%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%82%D0%BE%D1%80)).
-Пример *_actuatorProps* типа [**ActuatorOptsType**](https://github.com/Konkery/ModuleActuator/blob/main/README.md):
-```js
-let _actuatorProps = {
-    name: "FS90",
-    type: "actuator",
-    channelNames: ["position"],
-    typeInSignals: ["analog"],
-    quantityChannel: 1,
-    manufacturingData: {
-        IDManufacturing: [
-            { "Feetech": "unknown" }  
-        ],
-        IDsupplier: [
-            { "Robotehnika": "14000615" }  
-        ],
-        HelpSens: "PWM servo"
-    }
-};
-```
-Пример *_opts* типа [**ActuatorOptsType**](https://github.com/Konkery/ModuleActuator/blob/main/README.md):
-```js
-const _opts = {
-    pins: [P2],       //массив пинов
-    range: 180,       //диапазон поворота вала сервопривода
-    minPulse: 0.544,  //мин. импульс
-    maxPulse: 2.4,    //макс. импульс
-    startPos: 0       //начальная позиция
+В соответствии с архитектурой ModuleActuator, конструктор принимает специфичные данные из конфигурации:
+```json
+"servo": {
+    "name": "FS90",
+    "pins": ["P2"],     //массив пинов
+    "range": 180,       //диапазон поворота вала сервопривода
+    "minPulse": 0.544,  //мин. импульс
+    "maxPulse": 2.4,    //макс. импульс
+    "startPos": 0,      //начальная позиция
+    "type": "actuator",
+    "channelNames": ["position"],
+    "quantityChannel": 1,
+    "modules": ["ModuleServo.min.js"]
 }
 ```
 
@@ -83,10 +68,9 @@ const _opts = {
 ### Методы
 <div style = "color: #555">
 
-- <mark style="background-color: lightblue">On(_chNum, _pos)</mark> - выполняет поворот вала сервопривода в указанное положение. При работе через канал, аргумент *_chNum* пропускается;
-- <mark style="background-color: lightblue">Off()</mark> - прекращает удержание угла сервоприводом;
+- <mark style="background-color: lightblue">SetValue(_chNum, _pos)</mark> - выполняет поворот вала сервопривода в указанное положение. При работе через канал, аргумент *_chNum* пропускается;
 - <mark style="background-color: lightblue">Reset()</mark> - устанавливает вал сервопривода его в начальное положение, заданное через конструктор либо определяемое минимальной величиной из диапазона *_Range*;
-- <mark style="background-color: lightblue">GetPosition()</mark> - возвращает объект, содержащий информацию о текущей позиции сервопривода. 
+- <mark style="background-color: lightblue">GetInfo()</mark> - возвращает объект, содержащий информацию о текущей позиции сервопривода. 
 Примечание: метод возвращает данные, которые определяются последней командой, полученной модулем, а тк же характеристиками, указанными при инициализации. Поэтому если положение вала сервопривода было изменено в обход методов, представленных в ModuleServo, полученные значения вероятно не будут соответствовать действительности.
 
 </div>
@@ -96,39 +80,9 @@ const _opts = {
 Пример программы c управлением сервоприводом:
 
 ```js
-//Подключение необходимых модулей
-const ClassAppError       = require('ModuleAppError.min.js');
-const ClassMiddleActuator = require('ModuleActuator.min');
-const ClassServo          = require('ModuleServo.min.js');
-
-//Настройка передаваемых объектов
-let servoProps = {
-    name: "FS90",
-    type: "actuator",
-    channelNames: ["position"],
-    typeInSignals: ["analog"],
-    quantityChannel: 1,
-    manufacturingData: {
-        IDManufacturing: [
-            { "Feetech": "unknown" }  
-        ],
-        IDsupplier: [
-            { "Robotehnika": "14000615" }  
-        ],
-        HelpSens: "PWM servo"
-    }
-};
-
-const opts = {
-    pins: [P2],       
-    range: 180,       
-    minPulse: 0.544,  
-    maxPulse: 2.4,    
-    startPos: 0       
-}
 //Создание объекта класса
 //Так как у серво только один канал, сразу сохраняем ссылку на него
-let servo = new ClassServo(opts, servoProps).GetChannel(0);
+let servo = SensorManager.CreateDevice('servo')[0];
 
 //Смена положения с 0° до 180° и обратно по интервалу  
 let flag = false;
@@ -136,7 +90,7 @@ setInterval(() => {
     let pos = flag ? 0 : 1;
     flag = !flag;
 
-    servo.On(pos);
+    servo.SetValue(pos);
 }, 2000);
 ```
 В результате выполнения программы сервопривод начнет менять положение от минимального до максимального с интервалом в секунды.
