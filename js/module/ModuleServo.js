@@ -1,3 +1,4 @@
+const ClassActuator = require('ModuleActuator.min.js');
 //функция преобразует число, пропорционально приводя его к одного диапазона к другому
 //пример: proportion(5, 0, 10, 10, 20) -> 15 
 const proportion = (x, in_low, in_high, out_low, out_high) => {
